@@ -25,9 +25,6 @@ def compute_dictionary_one_image(args):
     filter_responses = extract_filter_responses(opts, img)
     # reshape the filter responses to a 2D array and select an alpha random subset of responses
     filter_responses = filter_responses.reshape(-1, filter_responses.shape[-1])
-    alpha = opts.alpha
-    if alpha < filter_responses.shape[0]:
-        filter_responses = filter_responses[np.random.choice(filter_responses.shape[0], alpha, replace=False)]
     return filter_responses
 
 def extract_filter_responses(opts, img):
@@ -119,7 +116,11 @@ def compute_dictionary(opts, n_worker=1):
     
     # Use multiprocessing to parallelize the computation of filter responses
     with multiprocessing.Pool(n_worker) as pool:
-        all_responses = list(tqdm(pool.imap(compute_dictionary_one_image, [(opts, img_file) for img_file in train_files]), total=len(train_files), desc="Processing images"))
+        all_responses_ = list(tqdm(pool.imap(compute_dictionary_one_image, [(opts, img_file) for img_file in train_files]), total=len(train_files), desc="Processing images"))
+
+    # select alpha points at random 
+    alpha = opts.alpha
+    all_responses = [response[np.random.choice(response.shape[0], alpha, replace=False), :] for response in all_responses_ if response is not None]
 
     # Stack all responses into a single 2D array
     all_responses = np.vstack(all_responses)

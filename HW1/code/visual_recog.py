@@ -243,6 +243,10 @@ def evaluate_recognition_system(opts, n_worker=1):
         if predicted_label == true_label:
             correct_predictions += 1
 
+    # dum predicted labels, true labels and test_image names to a single text file
+    with open(join(out_dir, 'predicted_labels.txt'), 'w') as f:
+        for i in range(len(results)):
+            f.write(f"{test_files[i]} {results[i][0]} {results[i][1]}\n")
     # Calculate accuracy
     accuracy = correct_predictions / len(test_labels)
 
