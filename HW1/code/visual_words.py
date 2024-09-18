@@ -6,7 +6,6 @@ import numpy as np
 from PIL import Image
 import scipy.ndimage
 import skimage.color
-from torch import gradient
 from sklearn.cluster import KMeans
 from tqdm import tqdm
 
