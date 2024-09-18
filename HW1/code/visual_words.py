@@ -9,6 +9,21 @@ import skimage.color
 from sklearn.cluster import KMeans
 from tqdm import tqdm
 
+def compute_dictionary_one_image(args):
+    '''
+    Extracts filter responses for a single image.
+
+    [input]
+    * args    : tuple containing (opts, img_file)
+    
+    [output]
+    * filter_responses: numpy.ndarray of shape (H*W, 3F)
+    '''
+    opts, img_file = args
+    img = np.array(Image.open(join(opts.data_dir, img_file)).convert('RGB')).astype(np.float32) / 255
+    filter_responses = extract_filter_responses(opts, img)
+    return filter_responses.reshape(-1, filter_responses.shape[-1])
+
 
 def extract_filter_responses(opts, img):
     '''
@@ -78,26 +93,6 @@ def extract_filter_responses(opts, img):
     return scale_channels_to_255(filter_responses)
 
 
-def compute_dictionary_one_image(args):
-    '''
-    Extracts a random subset of filter responses of an image and save it to disk
-    This is a worker function called by compute_dictionary
-
-    Your are free to make your own interface based on how you implement compute_dictionary
-    '''
-    opts = args[0]
-    img_path_local = args[1] 
-    img_path = join(opts.data_dir, img_path_local)
-    img = Image.open(img_path)
-    img = np.array(img).astype(np.float32)/255.0
-
-    filter_responses = extract_filter_responses(opts, img)
-    filter_responses_2d = filter_responses.reshape(-1, filter_responses.shape[-1])
-    random_indices = np.random.choice(filter_responses_2d.shape[0], args[0].alpha, replace=False)
-    filter_responses_subset = filter_responses_2d[random_indices, :]
-    return filter_responses_subset
-
-
 def compute_dictionary(opts, n_worker=1):
     '''
     Creates the dictionary of visual words by clustering using k-means.
@@ -116,14 +111,10 @@ def compute_dictionary(opts, n_worker=1):
     K = opts.K
 
     train_files = open(join(data_dir, 'train_files.txt')).read().splitlines()
-    all_responses = []
-
-    # Process each training image to extract filter responses
-    for img_file in tqdm(train_files, desc="Processing images"):
-        # Compute filter responses for the current image
-        responses = compute_dictionary_one_image((opts, img_file))
-        # Append the responses to the list
-        all_responses.append(responses)
+    
+    # Use multiprocessing to parallelize the computation of filter responses
+    with multiprocessing.Pool(n_worker) as pool:
+        all_responses = list(tqdm(pool.imap(compute_dictionary_one_image, [(opts, img_file) for img_file in train_files]), total=len(train_files), desc="Processing images"))
 
     # Stack all responses into a single 2D array
     all_responses = np.vstack(all_responses)
