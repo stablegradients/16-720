@@ -39,6 +39,8 @@ def main():
     ## Q2.5
     n_cpu = util.get_num_CPU()
     conf, accuracy = visual_recog.evaluate_recognition_system(opts, n_worker=n_cpu)
+    print("accuracy is ", accuracy)
+    print(" ")
     
     np.savetxt(join(opts.out_dir, 'confmat.csv'), conf, fmt='%d', delimiter=',')
     np.savetxt(join(opts.out_dir, 'accuracy.txt'), [accuracy], fmt='%g')
