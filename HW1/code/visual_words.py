@@ -8,7 +8,6 @@ import scipy.ndimage
 import skimage.color
 from sklearn.cluster import KMeans
 from tqdm import tqdm
-from sklearn.cluster import MiniBatchKMeans
 
 def compute_dictionary_one_image(args):
     '''
@@ -121,7 +120,7 @@ def compute_dictionary(opts, n_worker=1):
     all_responses = np.vstack(all_responses)
 
     # Perform k-means clustering to create the dictionary of visual words
-    kmeans = MiniBatchKMeans(n_clusters=K, verbose=True, batch_size=1000).fit(all_responses)
+    kmeans = KMeans(n_clusters=K, verbose=True, n_init=0).fit(all_responses)
     dictionary = kmeans.cluster_centers_
 
     # Save the dictionary to disk
