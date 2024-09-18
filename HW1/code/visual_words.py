@@ -120,7 +120,7 @@ def compute_dictionary(opts, n_worker=1):
     all_responses = np.vstack(all_responses)
 
     # Perform k-means clustering to create the dictionary of visual words
-    kmeans = KMeans(n_clusters=K, verbose=True, random_state=0).fit(all_responses)
+    kmeans = KMeans(n_clusters=K, verbose=True, random_state=0, n_jobs=n_worker).fit(all_responses)
     dictionary = kmeans.cluster_centers_
 
     # Save the dictionary to disk

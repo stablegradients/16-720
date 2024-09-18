@@ -21,8 +21,8 @@ def main():
     # util.display_filter_responses(opts, filter_responses)
 
     ## Q1.2
-    # n_cpu = util.get_num_CPU()
-    # visual_words.compute_dictionary(opts, n_worker=n_cpu)
+    n_cpu = util.get_num_CPU()
+    visual_words.compute_dictionary(opts, n_worker=n_cpu)
     
     ## Q1.3
     # img_path = join(opts.data_dir, 'kitchen/sun_aasmevtpkslccptd.jpg')
