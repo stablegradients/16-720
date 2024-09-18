@@ -14,11 +14,11 @@ def main():
     opts = get_opts()
 
     ## Q1.1
-    img_path = join(opts.data_dir, 'kitchen/sun_aasmevtpkslccptd.jpg')
-    img = Image.open(img_path)
-    img = np.array(img).astype(np.float32)/255
-    filter_responses = visual_words.extract_filter_responses(opts, img)
-    util.display_filter_responses(opts, filter_responses)
+    # img_path = join(opts.data_dir, 'aquarium/sun_aztvjgubyrgvirup.jpg')
+    # img = Image.open(img_path)
+    # img = np.array(img).astype(np.float32)/255
+    # filter_responses = visual_words.extract_filter_responses(opts, img)
+    # util.display_filter_responses(opts, filter_responses)
 
     ## Q1.2
     # n_cpu = util.get_num_CPU()
@@ -37,13 +37,13 @@ def main():
     # visual_recog.build_recognition_system(opts, n_worker=n_cpu)
 
     ## Q2.5
-    # n_cpu = util.get_num_CPU()
-    # conf, accuracy = visual_recog.evaluate_recognition_system(opts, n_worker=n_cpu)
+    n_cpu = util.get_num_CPU()
+    conf, accuracy = visual_recog.evaluate_recognition_system(opts, n_worker=n_cpu)
     
-    # print(conf)
-    # print(accuracy)
-    # np.savetxt(join(opts.out_dir, 'confmat.csv'), conf, fmt='%d', delimiter=',')
-    # np.savetxt(join(opts.out_dir, 'accuracy.txt'), [accuracy], fmt='%g')
+    print(conf)
+    print(accuracy)
+    np.savetxt(join(opts.out_dir, 'confmat.csv'), conf, fmt='%d', delimiter=',')
+    np.savetxt(join(opts.out_dir, 'accuracy.txt'), [accuracy], fmt='%g')
 
 
 

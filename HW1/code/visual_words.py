@@ -1,3 +1,4 @@
+from http.client import responses
 import os, multiprocessing
 from os.path import join, isfile
 
@@ -6,6 +7,8 @@ from PIL import Image
 import scipy.ndimage
 import skimage.color
 from torch import gradient
+from sklearn.cluster import KMeans
+from tqdm import tqdm
 
 
 def extract_filter_responses(opts, img):
@@ -71,7 +74,7 @@ def extract_filter_responses(opts, img):
 
     # Concatenate all filter responses along the last axis
     filter_responses = np.concatenate(filter_responses, axis=-1)
-    
+
     # Scale the filter responses to the range [0, 255]
     return scale_channels_to_255(filter_responses)
 
@@ -83,9 +86,18 @@ def compute_dictionary_one_image(args):
 
     Your are free to make your own interface based on how you implement compute_dictionary
     '''
+    opts = args[0]
+    img_path_local = args[1] 
+    img_path = join(opts.data_dir, img_path_local)
+    img = Image.open(img_path)
+    img = np.array(img).astype(np.float32)/255.0
 
-    # ----- TODO -----
-    pass
+    filter_responses = extract_filter_responses(opts, img)
+    filter_responses_2d = filter_responses.reshape(-1, filter_responses.shape[-1])
+    random_indices = np.random.choice(filter_responses_2d.shape[0], args[0].alpha, replace=False)
+    filter_responses_subset = filter_responses_2d[random_indices, :]
+    return filter_responses_subset
+
 
 def compute_dictionary(opts, n_worker=1):
     '''
@@ -105,11 +117,26 @@ def compute_dictionary(opts, n_worker=1):
     K = opts.K
 
     train_files = open(join(data_dir, 'train_files.txt')).read().splitlines()
-    # ----- TODO -----
-    pass
+    all_responses = []
 
-    ## example code snippet to save the dictionary
-    # np.save(join(out_dir, 'dictionary.npy'), dictionary)
+    # Process each training image to extract filter responses
+    for img_file in tqdm(train_files, desc="Processing images"):
+        # Compute filter responses for the current image
+        responses = compute_dictionary_one_image((opts, img_file))
+        # Append the responses to the list
+        all_responses.append(responses)
+
+    # Stack all responses into a single 2D array
+    all_responses = np.vstack(all_responses)
+
+    # Perform k-means clustering to create the dictionary of visual words
+    kmeans = KMeans(n_clusters=K, verbose=True, random_state=0).fit(all_responses)
+    dictionary = kmeans.cluster_centers_
+
+    # Save the dictionary to disk
+    np.save(join(out_dir, 'dictionary.npy'), dictionary)
+    return
+
 
 def get_visual_words(opts, img, dictionary):
     '''
@@ -124,5 +151,10 @@ def get_visual_words(opts, img, dictionary):
     '''
     
     # ----- TODO -----
-    pass
+    filter_response = extract_filter_responses(opts, img)
+    word_map = np.zeros((img.shape[0], img.shape[1]))
+    for i in range(img.shape[0]):
+        for j in range(img.shape[1]):
+            word_map[i, j] = np.argmin(np.linalg.norm(filter_response[i, j] - dictionary, axis=1))
+    return word_map
 
