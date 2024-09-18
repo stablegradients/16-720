@@ -2,9 +2,9 @@
 
 # Define the ranges for the parameters
 K_values=(50 100 150)
-L_values=(2 3)
+L_values=(2 3 4)
 alpha_values=(36 81 144)
-filter_scales_values=("1 2 4 8 16")
+filter_scales_values=("1 2 4 8" "1 2 4 8 16" "1 2 4 8 16 32")
 
 # Create a directory to store the results
 mkdir -p ablation_results
