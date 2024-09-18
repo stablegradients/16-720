@@ -120,6 +120,9 @@ def compute_dictionary(opts, n_worker=1):
     # Stack all responses into a single 2D array
     all_responses = np.vstack(all_responses)
 
+    # randomly select alpha responses
+    all_responses = all_responses[np.random.choice(all_responses.shape[0], size=opts.alpha, replace=False), :]
+
     # Perform k-means clustering to create the dictionary of visual words
     kmeans = MiniBatchKMeans(n_clusters=K, verbose=True, batch_size=100, max_iter=500, tol=0.02).fit(all_responses)
     dictionary = kmeans.cluster_centers_
