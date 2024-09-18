@@ -23,8 +23,12 @@ def compute_dictionary_one_image(args):
     opts, img_file = args
     img = np.array(Image.open(join(opts.data_dir, img_file)).convert('RGB')).astype(np.float32) / 255
     filter_responses = extract_filter_responses(opts, img)
-    return filter_responses.reshape(-1, filter_responses.shape[-1])
-
+    # reshape the filter responses to a 2D array and select an alpha random subset of responses
+    filter_responses = filter_responses.reshape(-1, filter_responses.shape[-1])
+    alpha = opts.alpha
+    if alpha < filter_responses.shape[0]:
+        filter_responses = filter_responses[np.random.choice(filter_responses.shape[0], alpha, replace=False)]
+    return filter_responses
 
 def extract_filter_responses(opts, img):
     '''
@@ -120,9 +124,7 @@ def compute_dictionary(opts, n_worker=1):
     # Stack all responses into a single 2D array
     all_responses = np.vstack(all_responses)
 
-    # randomly select alpha responses
-    all_responses = all_responses[np.random.choice(all_responses.shape[0], size=opts.alpha, replace=False), :]
-
+    
     # Perform k-means clustering to create the dictionary of visual words
     kmeans = KMeans(n_clusters=K, verbose=True).fit(all_responses)
     dictionary = kmeans.cluster_centers_
