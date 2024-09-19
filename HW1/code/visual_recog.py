@@ -56,8 +56,8 @@ def get_feature_from_wordmap_SPM(opts, wordmap):
     with concurrent.futures.ThreadPoolExecutor() as executor:
         futures = []
         for l in range(L):
-            w = wordmap.shape[1] // (2**(-l))
-            h = wordmap.shape[0] // (2**(-l))
+            w = wordmap.shape[1] // (2**(l))
+            h = wordmap.shape[0] // (2**(l))
             for i in range(2**l):
                 for j in range(2**l):
                     wordmap_sub = wordmap[int(i*h):int((i+1)*h), int(j*w):int((j+1)*w)]
@@ -97,7 +97,11 @@ from tqdm import tqdm
 
 # External function to process a single image
 def process_image(file_idx, opts, train_files, dictionary, data_dir):
-    return get_image_feature(opts, join(data_dir, train_files[file_idx]), dictionary)
+    try:
+        return get_image_feature(opts, join(data_dir, train_files[file_idx]), dictionary)
+    except Exception as e:
+        print(f"Error processing image {file_idx}: {e}")
+        return None
 
 def build_recognition_system(opts, n_worker=1):
     '''
@@ -125,12 +129,12 @@ def build_recognition_system(opts, n_worker=1):
     
     # Use ProcessPoolExecutor to parallelize the processing of images
     with ProcessPoolExecutor(max_workers=n_worker) as executor:
-        results = list(tqdm(executor.map(process_image, range(len(train_files)), [opts]*len(train_files), [train_files]*len(train_files), [dictionary]*len(train_files), [data_dir]*len(train_files)), total=len(train_files), desc="Processing images"))
+        futures = [executor.submit(process_image, i, opts, train_files, dictionary, data_dir) for i in range(len(train_files))]
+        for future in futures:
+            result = future.result()
+            if result is not None:
+                features.append(result)
 
-    # Collect features and labels from the results
-    for feature in results:
-        features.append(feature)
-        
     # Convert lists to numpy arrays
     features = np.array(features)
     np.savez_compressed(join(out_dir, 'trained_system.npz'),
