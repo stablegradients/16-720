@@ -43,30 +43,28 @@ def get_feature_from_wordmap_SPM(opts, wordmap):
         
     K = opts.K
     L = opts.L
-    # ----- TODO -----
-    import concurrent.futures
+    H, W = wordmap.shape
+    hist_all = []
 
-    def compute_histogram(wordmap_sub, K):
-        hist = np.zeros(K)
-        for k in range(K):
-            hist[k] = np.sum(wordmap_sub == k)
-        return hist
+    for l in range(L + 1):
+        num_cells = 2 ** l
+        cell_H = H // num_cells
+        cell_W = W // num_cells
+        hist_level = []
 
-    hist_all = np.empty(0)
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        futures = []
-        for l in range(L):
-            w = wordmap.shape[1] // (2**(l))
-            h = wordmap.shape[0] // (2**(l))
-            for i in range(2**l):
-                for j in range(2**l):
-                    wordmap_sub = wordmap[int(i*h):int((i+1)*h), int(j*w):int((j+1)*w)]
-                    futures.append(executor.submit(compute_histogram, wordmap_sub, K))
+        for i in range(num_cells):
+            for j in range(num_cells):
+                cell_wordmap = wordmap[i * cell_H:(i + 1) * cell_H, j * cell_W:(j + 1) * cell_W]
+                hist = get_feature_from_wordmap(opts, cell_wordmap)
+                hist_level.append(hist)
 
-        for future in concurrent.futures.as_completed(futures):
-            hist_all = np.concatenate((hist_all, future.result()), 0)
+        hist_level = np.concatenate(hist_level)
+        weight = 2 ** (l - L) if l != 0 else 2 ** (-L)
+        hist_all.append(hist_level * weight)
 
-    hist_all = hist_all / np.sum(hist_all)
+    hist_all = np.concatenate(hist_all)
+    hist_all = hist_all / np.sum(hist_all)  # Normalize the histogram
+
     return hist_all
     
 def get_image_feature(opts, img_path, dictionary):
