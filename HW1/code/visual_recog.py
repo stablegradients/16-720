@@ -26,7 +26,7 @@ def get_feature_from_wordmap(opts, wordmap):
     hist = np.zeros(K)
     for i in range(K):
         hist[i] = np.sum(wordmap == i)
-    hist = hist / np.sum(hist)
+    # hist = hist / np.sum(hist)
     return hist
 
 def get_feature_from_wordmap_SPM(opts, wordmap):
@@ -59,7 +59,7 @@ def get_feature_from_wordmap_SPM(opts, wordmap):
                 hist_level.append(hist)
 
         hist_level = np.concatenate(hist_level)
-        weight = 2 ** (l - L) if l != 0 else 2 ** (-L)
+        weight = 2.0 ** (l - L) if l != 0 else 2.0 ** (-L)
         hist_all.append(hist_level * weight)
 
     hist_all = np.concatenate(hist_all)
